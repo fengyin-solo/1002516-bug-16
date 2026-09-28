@@ -5,10 +5,12 @@
 """
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import settings
+from app.errors import DomainError
 from app.routers import ROUTERS
 from app.store import store
 
@@ -21,6 +23,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(DomainError)
+def domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+    """把业务越权/冲突统一翻译成结构化响应，依赖注入阶段抛出的也能正确返回状态码。"""
+    detail: dict[str, object] = {"ok": False, "message": exc.message}
+    if exc.missing_permission:
+        detail["missing_permission"] = exc.missing_permission
+    if exc.duplicate:
+        detail["duplicate"] = True
+    return JSONResponse(status_code=exc.status_code, content={"detail": detail})
+
 
 for module in ROUTERS:
     app.include_router(module.router)

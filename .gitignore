@@ -85,3 +85,5 @@ desktop.ini
 *.db
 *.pid
 *.seed
+.venv311/
+.venv*/
