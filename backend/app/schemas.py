@@ -19,6 +19,7 @@ class ActionResult(BaseModel):
     ok: bool
     message: str
     entry: dict[str, Any] | None = None
+    applied: bool = False  # 是否实际产生了一次状态/配置变更（重复操作时为 False）
 
 
 class EntryPayload(BaseModel):
